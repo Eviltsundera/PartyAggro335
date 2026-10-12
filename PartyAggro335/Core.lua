@@ -53,6 +53,11 @@ function Model:SetMeleeVictim(guid, victimGUID, name, now)
     end
 end
 
+function Model:SetPlateObservation(guid, observation, now)
+    local enemy = self.enemies[guid]
+    if enemy then enemy.plateObservation = observation; enemy.plateObservedAt = now end
+end
+
 function Model:Prune(now)
     for guid, enemy in pairs(self.enemies) do
         if now - enemy.lastSeen > self.ttl then self.enemies[guid] = nil end
@@ -83,11 +88,32 @@ function Model:Rows(now, playerGUID)
                 row.status = "lost"
             end
         end
+        local plate = enemy.plateObservation
+        if plate and now - enemy.plateObservedAt <= self.snapshotTTL then
+            row.hp = row.hp or plate.hp
+            if row.status == "unknown" and type(plate.status) == "number" then
+                row.status = plate.status == 3 and "safe" or (plate.status == 2 and "risk" or "lost")
+                row.threatSource = "plate"
+            end
+        end
         -- A melee victim is an observation, never a fabricated threat percentage.
         if not row.targetGUID and enemy.meleeVictim and now - enemy.meleeVictim.at <= self.victimTTL then
             row.targetGUID = enemy.meleeVictim.guid
             row.targetName = enemy.meleeVictim.name
             row.targetSource = "melee"
+        end
+        -- Arrows mean the mob targets/hit another group member, not just high TPS.
+        if row.targetGUID and row.targetSource == "target" and observation and observation.targetInGroup then
+            row.offYou = row.targetGUID ~= playerGUID
+            row.offYouSource = "target"
+        elseif row.targetGUID and row.targetSource == "melee" and row.status == "unknown" then
+            row.status = row.targetGUID == playerGUID and "safe" or "lost"
+            row.threatSource = "melee"
+            row.offYou = row.targetGUID ~= playerGUID
+            row.offYouSource = "melee"
+        elseif row.status == "lost" and row.threatSource ~= "melee" then
+            row.offYou = true
+            row.offYouSource = row.threatSource or "threat"
         end
         row.stale = now - enemy.lastSeen > 8
         rows[#rows + 1] = row

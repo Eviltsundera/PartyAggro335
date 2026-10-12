@@ -3,11 +3,12 @@
 ## Notes: Side panel of enemies engaged by your group, their targets and your threat.
 ## Notes-ruRU: Таблица противников группы, их целей и вашего агро.
 ## Author: Eviltsundera
-## Version: 0.1.0
+## Version: 0.2.0
 ## SavedVariables: PartyAggro335DB
 ## DefaultState: enabled
 
 Locale.lua
 Core.lua
 UI.lua
+Nameplates.lua
 Main.lua

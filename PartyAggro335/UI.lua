@@ -70,7 +70,8 @@ function UI.New(settings)
             GameTooltip:AddLine("GUID: " .. text(data.guid), 0.7, 0.75, 0.8, true)
             local sources = { target = L.actual, threat = L.leader, melee = L.melee }
             if data.targetSource then GameTooltip:AddLine(sources[data.targetSource] or L.missing, 0.85, 0.8, 0.55, true) end
-            GameTooltip:AddLine(not data.hasThreat and L.missing or L.percent, 0.7, 0.75, 0.8, true)
+            local threatSources = { plate = L.plate, melee = L.observed }
+            GameTooltip:AddLine(threatSources[data.threatSource] or (not data.hasThreat and L.missing or L.percent), 0.7, 0.75, 0.8, true)
             if data.stale then GameTooltip:AddLine(L.old, 0.85, 0.65, 0.4) end
             GameTooltip:Show()
         end)
@@ -100,7 +101,7 @@ function UI.New(settings)
             row.victim:SetText((inferred and "~" or "") .. text(value.targetName))
             row.victim:SetTextColor(0.9, 0.9, 0.92)
             local percent = value.percent and string.format("%.0f%% ", value.percent) or "? "
-            row.threat:SetText(percent .. labels[value.status])
+            row.threat:SetText(percent .. (value.threatSource == "melee" and "~" or "") .. labels[value.status])
             row.threat:SetTextColor(color[1], color[2], color[3])
             row.health:SetText(value.hp and string.format("%.0f%%", value.hp) or "?")
             row.health:SetTextColor(0.75, 0.8, 0.86)

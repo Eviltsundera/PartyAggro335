@@ -20,7 +20,7 @@ local function message(value)
     DEFAULT_CHAT_FRAME:AddMessage("|cff88bbffPartyAggro335:|r " .. value)
 end
 local function defaults()
-    return { maxRows = 12, scale = 1, locked = true, hidden = false,
+    return { maxRows = 12, scale = 1, locked = true, hidden = false, arrows = true, arrowSize = 36,
         position = { point = "RIGHT", relativePoint = "RIGHT", x = -25, y = 0 } }
 end
 local function settings(saved)
@@ -29,6 +29,8 @@ local function settings(saved)
     if type(saved.maxRows) == "number" then value.maxRows = math.floor(math.max(5, math.min(30, saved.maxRows))) end
     if type(saved.scale) == "number" then value.scale = math.max(0.6, math.min(1.6, saved.scale)) end
     value.locked, value.hidden = saved.locked ~= false, saved.hidden == true
+    value.arrows = saved.arrows ~= false
+    if type(saved.arrowSize) == "number" then value.arrowSize = math.max(16, math.min(64, saved.arrowSize)) end
     local anchors = { TOP = true, TOPLEFT = true, TOPRIGHT = true, LEFT = true, CENTER = true,
         RIGHT = true, BOTTOM = true, BOTTOMLEFT = true, BOTTOMRIGHT = true }
     local pos = saved.position
@@ -168,6 +170,7 @@ function Addon:Scan(now)
     self.model:Prune(now)
     if active then self.lastCombatActivity = now end
     if not active and now - self.lastCombatActivity > 5 then self.model:Clear() end
+    if self.plates then self.plates:Update(now, units) end
     local rows = self.preview and Core.Preview() or self.model:Rows(now, self.playerGUID)
     self.ui:Render(rows, self.preview, not self.config.hidden and
         (self.preview or not self.config.locked or active or #rows > 0))
@@ -184,6 +187,20 @@ function Addon:Command(input)
         self.preview = not self.preview; self.config.hidden = false
         message(self.preview and L.demoOn or L.demoOff)
     elseif command == "clear" then self.model:Clear(); message(L.cleared)
+    elseif command == "arrows" then
+        local action, value = argument:match("^(%S+)%s*(.-)$")
+        if action == "on" then self.config.arrows = true; self.plates.test = false; message(L.arrowsOn)
+        elseif action == "off" then self.config.arrows = false; self.plates.test = false; message(L.arrowsOff)
+        elseif action == "test" then self.config.arrows = true; self.plates.test = not self.plates.test; message(L.arrowsTest)
+        elseif action == "size" and tonumber(value) and tonumber(value) >= 16 and tonumber(value) <= 64 then self.config.arrowSize = tonumber(value); message(L.saved)
+        else message(L.arrowsHelp) end
+    elseif command == "debug" then
+        local data, exact, inferred = self.model:Rows(GetTime(), self.playerGUID), 0, 0
+        for _, row in ipairs(data) do
+            if row.hasThreat then exact = exact + 1 end
+            if row.targetSource == "melee" then inferred = inferred + 1 end
+        end
+        message(string.format(L.debug, #data, exact, inferred, self.plates.visible, self.plates.identified, self.plates.arrows))
     elseif command == "reset" then
         self.config = defaults(); PartyAggro335DB = self.config; self.ui.settings = self.config
         self.ui.Apply(); message(L.reset)
@@ -204,6 +221,7 @@ function Addon:Init()
     self.model = Core.New(); self.lastCombatActivity = GetTime() - 6
     self:RefreshGroup()
     self.ui = PartyAggro335UI.New(self.config)
+    self.plates = PartyAggro335Nameplates.New(self)
     SLASH_PARTYAGGRO3351 = "/pa"; SLASH_PARTYAGGRO3352 = "/partyaggro"
     SlashCmdList.PARTYAGGRO335 = function(input) self:Command(input) end
     local events = { "COMBAT_LOG_EVENT_UNFILTERED", "PARTY_MEMBERS_CHANGED", "RAID_ROSTER_UPDATE",

@@ -22,25 +22,49 @@ bit = { band = function(a, b) return twoBits(a, b, false) end,
 local Frame = {}; Frame.__index = Frame
 local noopMethods = { "SetClampedToScreen", "SetMovable", "EnableMouse", "RegisterForDrag",
     "SetFrameStrata", "SetBackdrop", "SetBackdropColor", "SetBackdropBorderColor", "SetFont",
-    "SetJustifyH", "SetTextColor", "SetAllPoints", "StartMoving", "StopMovingOrSizing", "SetOwner" }
+    "SetJustifyH", "SetTextColor", "SetAllPoints", "StartMoving", "StopMovingOrSizing", "SetOwner", "SetFrameLevel" }
 for _, name in ipairs(noopMethods) do Frame[name] = function() end end
 function Frame:SetWidth(v) self.width = v end
 function Frame:SetHeight(v) self.height = v end
 function Frame:SetScale(v) self.scale = v end
 function Frame:SetText(v) self.text = v end
-function Frame:SetTexture(...) self.color = { ... } end
+function Frame:SetTexture(...) self.color = { ... }; if type((...)) == "string" then self.texture = (...) end end
+function Frame:GetTexture() return self.texture end
+function Frame:SetVertexColor(...) self.vertex = { ... } end
+function Frame:GetVertexColor() return unpack(self.vertex or { 1, 1, 1, 1 }) end
+function Frame:SetTexCoord(...) self.coords = { ... } end
+function Frame:GetTexCoord() return unpack(self.coords or { 0, 0, 0, 1, 1, 0, 1, 1 }) end
+function Frame:GetText() return self.text end
+function Frame:GetChildren() return unpack(self.children or {}) end
+function Frame:GetRegions() return unpack(self.regions or {}) end
+function Frame:GetObjectType() return self.kind end
+function Frame:GetAlpha() return self.alpha or 1 end
+function Frame:GetFrameLevel() return 1 end
+function Frame:GetMinMaxValues() return self.minimum or 0, self.maximum or 100 end
+function Frame:GetValue() return self.value or 100 end
+function Frame:IsShown() return self.visible ~= false end
+function Frame:HookScript(name, callback)
+    self.hooks = self.hooks or {}; self.hooks[name] = self.hooks[name] or {}
+    table.insert(self.hooks[name], callback)
+end
 function Frame:SetPoint(...) self.point = { ... } end
 function Frame:GetPoint() return unpack(self.point or { "RIGHT", UIParent, "RIGHT", -25, 0 }) end
 function Frame:ClearAllPoints() self.point = nil end
 function Frame:RegisterEvent(event) self.events[event] = true end
 function Frame:SetScript(name, callback) self.scripts[name] = callback end
-function Frame:Show() self.visible = true end
-function Frame:Hide() self.visible = false end
+function Frame:Show()
+    local previous = self.visible; self.visible = true
+    if previous == false and self.hooks then for _, hook in ipairs(self.hooks.OnShow or {}) do hook(self) end end
+end
+function Frame:Hide()
+    local previous = self.visible; self.visible = false
+    if previous ~= false and self.hooks then for _, hook in ipairs(self.hooks.OnHide or {}) do hook(self) end end
+end
 function Frame:AddLine(value) self.lines[#self.lines + 1] = value end
 function Frame:CreateFontString() return CreateFrame("FontString") end
 function Frame:CreateTexture() return CreateFrame("Texture") end
 function CreateFrame(kind, name)
-    local frame = setmetatable({ scripts = {}, events = {}, lines = {} }, Frame)
+    local frame = setmetatable({ kind = kind, scripts = {}, events = {}, lines = {} }, Frame)
     if name then _G[name] = frame end
     return frame
 end
@@ -79,6 +103,10 @@ function UnitIsDead(unit) return units[unit] and units[unit].dead end
 function UnitHealth(unit) return units[unit] and units[unit].hp or 0 end
 function UnitHealthMax(unit) return units[unit] and units[unit].maxhp or 0 end
 function GetRaidTargetIndex(unit) return unit == "target" and 8 or nil end
+function GetThreatStatusColor(status)
+    if status == 1 then return 1, 1, 0 elseif status == 2 then return 1, 0.6, 0 elseif status == 3 then return 1, 0, 0 end
+    return 0.69, 0.69, 0.69
+end
 function UnitDetailedThreatSituation(unit, reference)
     local guid = UnitGUID(reference)
     if not guid then
@@ -92,6 +120,7 @@ PartyAggro335DB = { maxRows = "bad", scale = "bad", position = { point = "NOT_AN
 dofile(PROJECT_ROOT .. "/PartyAggro335/Locale.lua")
 dofile(PROJECT_ROOT .. "/PartyAggro335/Core.lua")
 dofile(PROJECT_ROOT .. "/PartyAggro335/UI.lua")
+dofile(PROJECT_ROOT .. "/PartyAggro335/Nameplates.lua")
 dofile(PROJECT_ROOT .. "/PartyAggro335/Main.lua")
 local addon = PartyAggro335Addon
 local function event(name, ...) addon.frame.scripts.OnEvent(addon.frame, name, ...) end
@@ -126,7 +155,8 @@ local function rowFor(guid)
 end
 eq(rowFor(C).targetSource, "melee", "observed melee target marked approximate")
 eq(rowFor(C).percent, nil, "unknown GUID threat not invented")
-eq(rowFor(C).status, "unknown", "missing API data remains unknown")
+eq(rowFor(C).status, "lost", "recent healer hit provides approximate off-player status")
+eq(rowFor(C).threatSource, "melee", "observed status does not pretend to be native threat")
 event("COMBAT_LOG_EVENT_UNFILTERED", 5001, "SWING_DAMAGE", "outsider-mob", "Outsider fight", enemyFlags,
     "outsider-player", "Stranger", outsiderFlags, 100)
 eq(addon.model.enemies["outsider-mob"], nil, "exclude unrelated fight")
@@ -192,3 +222,4 @@ eq(matches, 1, "deduplicate player in raid roster")
 event("PLAYER_ENTERING_WORLD")
 eq(#addon.model:Rows(now, PLAYER), 0, "zone entry clears enemy history")
 print("WoW API and UI scenarios passed: " .. count)
+PartyAggro335TestWorld = { units = units, SetTime = function(value) now = value end, GetTime = function() return now end }

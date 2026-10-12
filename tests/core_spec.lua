@@ -30,9 +30,13 @@ eq(rows[1].percent, nil, "expired percentage removed")
 model:SetObservation("mob1", {}, 1.5)
 eq(model:Rows(1.5, player)[1].percent, nil, "missing data does not become zero")
 model:SetMeleeVictim("mob1", player, "Tank", 1.5)
-local row = model:Rows(1.6, player)[1]
+local function find(guid, at)
+    for _, value in ipairs(model:Rows(at, player)) do if value.guid == guid then return value end end
+end
+local row = find("mob1", 1.6)
 eq(row.targetSource, "melee", "melee fallback explicitly identified")
-eq(row.status, "unknown", "melee attack does not manufacture threat status")
+eq(row.status, "safe", "recent melee victim provides explicitly observed status")
+eq(row.threatSource, "melee", "melee-based status is marked approximate")
 eq(row.percent, nil, "melee attack does not manufacture percentages")
 model:SetObservation("mob1", { targetName = "Healer", targetGUID = "healer",
     targetSource = "target", targetInGroup = true }, 1.7)
