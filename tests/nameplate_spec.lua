@@ -39,10 +39,18 @@ world.SetTime(200.2); plates:Update(200.2, known)
 eq(plates.visible, 2, "recognize original native nameplates only")
 eq(plates.identified, 0, "identical names and health never choose an arbitrary mob")
 eq(plates.arrows, 0, "ambiguous plate never gets a misleading arrow")
-first.regions[10]:SetTexCoord(0.75, 0.5, 0.75, 1, 1, 0.5, 1, 1)
+first.regions[10]:SetTexCoord(0.75, 0.25, 0.75, 0.5, 1, 0.25, 1, 0.5)
 first.regions[10]:Show(); plates:Update(200.25, known)
 eq(plates.tracked[first].guid, a, "existing raid marker disambiguates identical mobs")
 eq(plates.tracked[second].guid, nil, "unmarked ambiguous twin stays unidentified")
+local coordinates = { {0,0}, {0.25,0}, {0.5,0}, {0.75,0}, {0,0.25}, {0.25,0.25}, {0.5,0.25}, {0.75,0.25} }
+for index, coords in ipairs(coordinates) do
+    first.regions[10]:SetTexCoord(coords[1], coords[2], coords[1], coords[2] + 0.25,
+        coords[1] + 0.25, coords[2], coords[1] + 0.25, coords[2] + 0.25)
+    eq(plates:Snapshot(plates.tracked[first]).marker, index, "original atlas icon " .. index)
+end
+first.regions[10]:SetTexCoord(0.75, 0.5, 0.75, 0.75, 1, 0.5, 1, 0.75)
+eq(plates:Snapshot(plates.tracked[first]).marker, nil, "unused atlas rows are not real raid markers")
 first.regions[10]:Hide()
 second.alpha = 0.5
 world.units.mouseover = world.units.focus

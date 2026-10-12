@@ -56,8 +56,12 @@ function Plates:Snapshot(data)
     if shown(data.marker) and data.marker.GetTexCoord then
         local u, v = data.marker:GetTexCoord()
         if type(u) == "number" and type(v) == "number" then
-            local column, line = math.floor(u * 4 + 0.5), math.floor(v * 2 + 0.5)
-            if column >= 0 and column < 4 and line >= 0 and line < 2 then marker = line * 4 + column + 1 end
+            -- The original atlas is 4x4; its first two rows contain the eight icons.
+            local column, line = math.floor(u * 4 + 0.5), math.floor(v * 4 + 0.5)
+            if column >= 0 and column < 4 and line >= 0 and line < 2
+                and math.abs(u - column / 4) < 0.01 and math.abs(v - line / 4) < 0.01 then
+                marker = line * 4 + column + 1
+            end
         end
     end
     local status
