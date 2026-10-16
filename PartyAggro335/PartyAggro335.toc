@@ -3,7 +3,7 @@
 ## Notes: Side panel of enemies engaged by your group, their targets and your threat.
 ## Notes-ruRU: Таблица противников группы, их целей и вашего агро.
 ## Author: Eviltsundera
-## Version: 0.2.0
+## Version: 0.3.0
 ## SavedVariables: PartyAggro335DB
 ## DefaultState: enabled
 

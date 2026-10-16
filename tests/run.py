@@ -14,7 +14,7 @@ for path in sorted((ROOT / 'PartyAggro335').glob('*.lua')):
     )
     if isinstance(result, tuple) and result[0] is None:
         raise RuntimeError(f'{path.name}: {result[1]}')
-for name in ('core_spec.lua', 'wow_spec.lua', 'nameplate_spec.lua'):
+for name in ('core_spec.lua', 'wow_spec.lua', 'nameplate_spec.lua', 'target_spec.lua'):
     print(f'Running {name} under {version}...', flush=True)
     lua.execute((ROOT / 'tests' / name).read_text(encoding='utf-8'))
 print('All Lua 5.1 tests and addon syntax checks passed.')

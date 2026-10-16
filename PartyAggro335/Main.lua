@@ -173,7 +173,7 @@ function Addon:Scan(now)
     if self.plates then self.plates:Update(now, units) end
     local rows = self.preview and Core.Preview() or self.model:Rows(now, self.playerGUID)
     self.ui:Render(rows, self.preview, not self.config.hidden and
-        (self.preview or not self.config.locked or active or #rows > 0))
+        (self.preview or not self.config.locked or active or #rows > 0), UnitGUID("target"))
 end
 
 function Addon:Command(input)
@@ -247,6 +247,7 @@ Addon.frame:SetScript("OnEvent", function(_, event, ...)
     end
     if not Addon.model then return end
     if event == "COMBAT_LOG_EVENT_UNFILTERED" then Addon:CombatLog(...)
+    elseif event == "PLAYER_TARGET_CHANGED" then Addon.ui:UpdateTarget(UnitGUID("target"))
     elseif event == "PARTY_MEMBERS_CHANGED" or event == "RAID_ROSTER_UPDATE" then Addon:RefreshGroup()
     elseif event == "PLAYER_ENTERING_WORLD" then
         Addon.model:Clear(); Addon:RefreshGroup(); Addon.lastCombatActivity = GetTime() - 6

@@ -10,6 +10,7 @@ PartyAggro335L = {
     missing = "The client has not supplied current threat data for this enemy",
     percent = "Your scaled threat: 100% is the pull-aggro threshold, not your threat lead",
     tooltip = "Enemies are identified by GUID; identical names stay separate.",
+    currentTarget = "> Your current target",
     plate = "Status from the original nameplate threat indicator; no exact percentage available",
     observed = "~ Status inferred from the last melee hit, not a current threat query",
     help = "/pa show | hide | lock | unlock | test | clear | reset | rows 5-30 | scale 0.6-1.6 | arrows on/off/test | debug",
@@ -20,7 +21,7 @@ PartyAggro335L = {
     badRows = "Use /pa rows 5-30", badScale = "Use /pa scale 0.6-1.6",
     wrongClient = "Designed for the original WoW 3.3.5a client (Interface 30300).",
     ready = "Loaded. /pa unlock: move panel; /pa test: preview; /pa: help.",
-    limited = "~ = inferred target; ? = unavailable data",
+    limited = "> = your target; ~ = inferred; ? = unavailable data",
     overflow = "+%d more enemies (increase /pa rows)",
 }
 if GetLocale and GetLocale() == "ruRU" then
@@ -36,6 +37,7 @@ if GetLocale and GetLocale() == "ruRU" then
         missing = "Клиент не передал актуальное агро по этому мобу",
         percent = "Ваше агро: 100% — порог захвата цели, а не запас угрозы над другими",
         tooltip = "Мобы различаются по GUID, даже если у них одинаковые имена.",
+        currentTarget = "> Твоя текущая цель",
         plate = "Статус из стандартного индикатора угрозы над мобом; точный процент недоступен",
         observed = "~ Статус по последней ближней атаке, а не по текущему запросу агро",
         help = "/pa show | hide | lock | unlock | test | clear | reset | rows 5-30 | scale 0.6-1.6 | arrows on/off/test | debug",
@@ -46,7 +48,7 @@ if GetLocale and GetLocale() == "ruRU" then
         badRows = "Используй /pa rows 5-30", badScale = "Используй /pa scale 0.6-1.6",
         wrongClient = "Аддон рассчитан на оригинальный WoW 3.3.5a (Interface 30300).",
         ready = "Загружен. /pa unlock — переместить; /pa test — пример; /pa — помощь.",
-        limited = "~ — предположение о цели; ? — нет данных",
+        limited = "> — твоя цель; ~ — предположение; ? — нет данных",
         overflow = "Ещё мобов: %d (увеличь /pa rows)",
     }
 end
